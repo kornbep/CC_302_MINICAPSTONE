@@ -76,6 +76,7 @@ class _ECommerceAppState extends State<ECommerceApp> {
 // PRODUCT MODEL
 
 class Product {
+  final String id;
   final String name;
   final String category;
   final String description;
@@ -84,113 +85,156 @@ class Product {
   final IconData icon;
 
   Product({
+    required this.id,
     required this.name,
     required this.category,
     required this.description,
     required this.image,
     required this.price,
-    required this.icon,
-  });
+    IconData? icon,
+  }) : icon = icon ?? iconForCategory(category);
+
+  static IconData iconForCategory(String category) {
+    switch (category) {
+      case 'Electronics':
+        return Icons.devices;
+      case 'Furniture':
+        return Icons.chair_alt;
+      case 'School Supplies':
+        return Icons.school;
+      default:
+        return Icons.shopping_bag;
+    }
+  }
+
+  Product copyWith({
+    String? id,
+    String? name,
+    String? category,
+    String? description,
+    String? image,
+    double? price,
+    IconData? icon,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      category: category ?? this.category,
+      description: description ?? this.description,
+      image: image ?? this.image,
+      price: price ?? this.price,
+      icon: icon ?? this.icon,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Product && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 // SAMPLE PRODUCTS
 
 final List<Product> sampleProducts = [
   Product(
+    id: 'wireless-headphones',
     name: 'Wireless Headphones',
     category: 'Electronics',
     description: 'Comfortable headphones for music and online classes.',
     image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600',
     price: 1299,
-    icon: Icons.headphones,
   ),
   Product(
+    id: 'laptop-computer',
     name: 'Laptop Computer',
     category: 'Electronics',
     description: 'A laptop for studying, programming, and office work.',
     image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600',
     price: 24999,
-    icon: Icons.laptop,
   ),
   Product(
+    id: 'smart-watch',
     name: 'Smart Watch',
     category: 'Electronics',
     description: 'A modern smartwatch for your everyday activities.',
     image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600',
     price: 1899,
-    icon: Icons.watch,
   ),
   Product(
+    id: 'wireless-mouse',
     name: 'Wireless Mouse',
     category: 'Electronics',
     description: 'A convenient mouse for your laptop or computer.',
     image: 'https://images.unsplash.com/photo-1527814050087-3793815479db?w=600',
     price: 499,
-    icon: Icons.mouse,
   ),
   Product(
+    id: 'modern-chair',
     name: 'Modern Chair',
     category: 'Furniture',
     description: 'A comfortable chair for studying and working.',
     image: 'https://images.unsplash.com/photo-1503602642458-232111445657?w=600',
     price: 2499,
-    icon: Icons.chair,
   ),
   Product(
+    id: 'study-desk',
     name: 'Study Desk',
     category: 'Furniture',
     description: 'A simple desk for your home study area.',
     image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=600',
     price: 3999,
-    icon: Icons.desk,
   ),
   Product(
+    id: 'modern-bookshelf',
     name: 'Modern Bookshelf',
     category: 'Furniture',
     description: 'Keep your books and school materials organized.',
     image: 'https://images.unsplash.com/photo-1594620302200-9a762244a156?w=600',
     price: 3299,
-    icon: Icons.shelves,
   ),
   Product(
+    id: 'school-backpack',
     name: 'School Backpack',
     category: 'School Supplies',
     description: 'A useful backpack for school and everyday use.',
     image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600',
     price: 899,
-    icon: Icons.backpack,
   ),
   Product(
+    id: 'notebook-set',
     name: 'Notebook Set',
     category: 'School Supplies',
     description: 'Notebooks for your notes, lessons, and assignments.',
     image: 'https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=600',
     price: 199,
-    icon: Icons.menu_book,
   ),
   Product(
+    id: 'school-stationery',
     name: 'School Stationery',
     category: 'School Supplies',
     description: 'Useful stationery for school projects and activities.',
     image: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=600',
     price: 249,
-    icon: Icons.edit,
   ),
   Product(
+    id: 'desk-lamp',
     name: 'Desk Lamp',
     category: 'Furniture',
     description: 'A desk lamp for reading and nighttime studying.',
     image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=600',
     price: 699,
-    icon: Icons.light,
   ),
   Product(
+    id: 'tablet-device',
     name: 'Tablet Device',
     category: 'Electronics',
     description: 'A portable device for reading and online learning.',
     image: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=600',
     price: 8999,
-    icon: Icons.tablet,
   ),
 ];
 
@@ -262,6 +306,40 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
     });
   }
 
+  void addProduct(Product product) {
+    setState(() {
+      products.insert(0, product);
+    });
+  }
+
+  void updateProduct(Product oldProduct, Product newProduct) {
+    setState(() {
+      final index = products.indexWhere((product) => product.id == oldProduct.id);
+      if (index >= 0) {
+        products[index] = newProduct;
+      }
+
+      if (cart.containsKey(oldProduct)) {
+        final quantity = cart[oldProduct] ?? 0;
+        cart.remove(oldProduct);
+        cart[newProduct] = quantity;
+      }
+
+      if (wishlist.contains(oldProduct)) {
+        wishlist.remove(oldProduct);
+        wishlist.add(newProduct);
+      }
+    });
+  }
+
+  void deleteProduct(Product product) {
+    setState(() {
+      products.removeWhere((item) => item.id == product.id);
+      cart.remove(product);
+      wishlist.remove(product);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final pages = [
@@ -272,15 +350,17 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
         onToggleWishlist: toggleWishlist,
         isDarkMode: widget.isDarkMode,
         onToggleTheme: widget.onToggleTheme,
-        onAddProduct: (product) {
-          setState(() => products.insert(0, product));
-        },
+        onAddProduct: addProduct,
+        onEditProduct: updateProduct,
+        onDeleteProduct: deleteProduct,
       ),
       SearchPage(
         products: products,
         onAddToCart: addToCart,
         wishlist: wishlist,
         onToggleWishlist: toggleWishlist,
+        onEditProduct: updateProduct,
+        onDeleteProduct: deleteProduct,
       ),
       CartPage(
         cart: cart,
@@ -356,6 +436,8 @@ class ProductCard extends StatelessWidget {
   final bool isFavorite;
   final VoidCallback onAddToCart;
   final VoidCallback onToggleWishlist;
+  final VoidCallback onEditProduct;
+  final VoidCallback onDeleteProduct;
 
   const ProductCard({
     super.key,
@@ -363,6 +445,8 @@ class ProductCard extends StatelessWidget {
     required this.isFavorite,
     required this.onAddToCart,
     required this.onToggleWishlist,
+    required this.onEditProduct,
+    required this.onDeleteProduct,
   });
 
   @override
@@ -392,22 +476,73 @@ class ProductCard extends StatelessWidget {
                 Positioned(
                   top: 6,
                   right: 6,
-                  child: Material(
-                    color: Colors.white.withAlpha(230),
-                    shape: const CircleBorder(),
-                    child: IconButton(
-                      onPressed: onToggleWishlist,
-                      icon: Icon(
-                        isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: isFavorite ? Colors.red : Colors.black87,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Material(
+                        color: Colors.white.withAlpha(230),
+                        shape: const CircleBorder(),
+                        child: IconButton(
+                          onPressed: onToggleWishlist,
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite ? Colors.red : Colors.black87,
+                          ),
+                          iconSize: 19,
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                          padding: EdgeInsets.zero,
+                        ),
                       ),
-                      iconSize: 19,
-                      constraints: const BoxConstraints(
-                        minWidth: 36,
-                        minHeight: 36,
+                      const SizedBox(width: 4),
+                      Material(
+                        color: Colors.white.withAlpha(230),
+                        shape: const CircleBorder(),
+                        child: PopupMenuButton<String>(
+                          tooltip: 'Product actions',
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(
+                            Icons.more_vert,
+                            color: Colors.black87,
+                            size: 19,
+                          ),
+                          onSelected: (value) {
+                            if (value == 'edit') {
+                              onEditProduct();
+                            } else if (value == 'delete') {
+                              onDeleteProduct();
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem<String>(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.edit_outlined),
+                                  SizedBox(width: 8),
+                                  Text('Edit'),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem<String>(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete_outline, color: Colors.red),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Delete',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      padding: EdgeInsets.zero,
-                    ),
+                    ],
                   ),
                 ),
               ],
@@ -482,6 +617,8 @@ class HomePage extends StatefulWidget {
   final ValueChanged<Product> onAddToCart;
   final ValueChanged<Product> onToggleWishlist;
   final ValueChanged<Product> onAddProduct;
+  final void Function(Product oldProduct, Product newProduct) onEditProduct;
+  final ValueChanged<Product> onDeleteProduct;
   final bool isDarkMode;
   final VoidCallback onToggleTheme;
 
@@ -492,6 +629,8 @@ class HomePage extends StatefulWidget {
     required this.onAddToCart,
     required this.onToggleWishlist,
     required this.onAddProduct,
+    required this.onEditProduct,
+    required this.onDeleteProduct,
     required this.isDarkMode,
     required this.onToggleTheme,
   });
@@ -543,7 +682,7 @@ class _HomePageState extends State<HomePage> {
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => AddProductPage(onSave: widget.onAddProduct),
+                builder: (_) => ProductEditorPage(onSave: widget.onAddProduct),
               ),
             ),
             icon: const Icon(Icons.add_box_outlined),
@@ -750,6 +889,43 @@ class _HomePageState extends State<HomePage> {
                       isFavorite: widget.wishlist.contains(product),
                       onAddToCart: () => widget.onAddToCart(product),
                       onToggleWishlist: () => widget.onToggleWishlist(product),
+                      onEditProduct: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ProductEditorPage(
+                              product: product,
+                              onSave: (updatedProduct) {
+                                widget.onEditProduct(product, updatedProduct);
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                      onDeleteProduct: () {
+                        showDialog(
+                          context: context,
+                          builder: (dialogContext) => AlertDialog(
+                            title: const Text('Delete product?'),
+                            content: Text(
+                              'This will remove ${product.name} from your catalog.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(dialogContext),
+                                child: const Text('Cancel'),
+                              ),
+                              FilledButton.tonal(
+                                onPressed: () {
+                                  Navigator.pop(dialogContext);
+                                  widget.onDeleteProduct(product);
+                                },
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     );
                   }, childCount: filteredProducts.length),
                 );
@@ -800,6 +976,8 @@ class SearchPage extends StatefulWidget {
   final ValueChanged<Product> onAddToCart;
   final Set<Product> wishlist;
   final ValueChanged<Product> onToggleWishlist;
+  final void Function(Product oldProduct, Product newProduct) onEditProduct;
+  final ValueChanged<Product> onDeleteProduct;
 
   const SearchPage({
     super.key,
@@ -807,6 +985,8 @@ class SearchPage extends StatefulWidget {
     required this.onAddToCart,
     required this.wishlist,
     required this.onToggleWishlist,
+    required this.onEditProduct,
+    required this.onDeleteProduct,
   });
 
   @override
@@ -863,8 +1043,44 @@ class _SearchPageState extends State<SearchPage> {
                         product: product,
                         isFavorite: widget.wishlist.contains(product),
                         onAddToCart: () => widget.onAddToCart(product),
-                        onToggleWishlist: () =>
-                            widget.onToggleWishlist(product),
+                        onToggleWishlist: () => widget.onToggleWishlist(product),
+                        onEditProduct: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ProductEditorPage(
+                                product: product,
+                                onSave: (updatedProduct) {
+                                  widget.onEditProduct(product, updatedProduct);
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                        onDeleteProduct: () {
+                          showDialog(
+                            context: context,
+                            builder: (dialogContext) => AlertDialog(
+                              title: const Text('Delete product?'),
+                              content: Text(
+                                'This will remove ${product.name} from your catalog.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(dialogContext),
+                                  child: const Text('Cancel'),
+                                ),
+                                FilledButton.tonal(
+                                  onPressed: () {
+                                    Navigator.pop(dialogContext);
+                                    widget.onDeleteProduct(product);
+                                  },
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       );
                     },
                   ),
@@ -1467,18 +1683,28 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 }
 
-// ADD PRODUCT PAGE
+// ADD / EDIT PRODUCT PAGE
 
-class AddProductPage extends StatefulWidget {
+class ProductEditorPage extends StatefulWidget {
+  final Product? product;
   final ValueChanged<Product> onSave;
 
-  const AddProductPage({super.key, required this.onSave});
+  const ProductEditorPage({
+    super.key,
+    this.product,
+    required this.onSave,
+  });
 
   @override
-  State<AddProductPage> createState() => _AddProductPageState();
+  State<ProductEditorPage> createState() => _ProductEditorPageState();
 }
 
-class _AddProductPageState extends State<AddProductPage> {
+class AddProductPage extends ProductEditorPage {
+  const AddProductPage({super.key, required super.onSave})
+      : super(product: null);
+}
+
+class _ProductEditorPageState extends State<ProductEditorPage> {
   final formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   final priceController = TextEditingController();
@@ -1486,6 +1712,20 @@ class _AddProductPageState extends State<AddProductPage> {
   final imageController = TextEditingController();
 
   String category = 'Electronics';
+  bool get isEditing => widget.product != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.product != null) {
+      final product = widget.product!;
+      nameController.text = product.name;
+      priceController.text = product.price.toString();
+      descriptionController.text = product.description;
+      imageController.text = product.image;
+      category = product.category;
+    }
+  }
 
   @override
   void dispose() {
@@ -1499,7 +1739,9 @@ class _AddProductPageState extends State<AddProductPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add New Product')),
+      appBar: AppBar(
+        title: Text(isEditing ? 'Edit Product' : 'Add New Product'),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -1507,23 +1749,23 @@ class _AddProductPageState extends State<AddProductPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Center(
+              Center(
                 child: Icon(
-                  Icons.add_shopping_cart,
+                  isEditing ? Icons.edit_note_outlined : Icons.add_shopping_cart,
                   size: 65,
                   color: primaryColor,
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Product Details',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              Text(
+                isEditing ? 'Update product details' : 'Product Details',
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               _field(nameController, 'Product Name', 'Enter product name'),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                initialValue: category,
+                value: category,
                 decoration: const InputDecoration(
                   labelText: 'Category',
                   border: OutlineInputBorder(),
@@ -1590,8 +1832,9 @@ class _AddProductPageState extends State<AddProductPage> {
                     if (!formKey.currentState!.validate()) return;
 
                     final image = imageController.text.trim();
-
                     final product = Product(
+                      id: widget.product?.id ??
+                          'product-${DateTime.now().millisecondsSinceEpoch}',
                       name: nameController.text.trim(),
                       category: category,
                       description: descriptionController.text.trim(),
@@ -1599,24 +1842,23 @@ class _AddProductPageState extends State<AddProductPage> {
                       image: image.isEmpty
                           ? 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600'
                           : image,
-                      icon: category == 'Electronics'
-                          ? Icons.devices
-                          : category == 'Furniture'
-                          ? Icons.chair
-                          : Icons.school,
                     );
 
                     widget.onSave(product);
                     Navigator.pop(context);
 
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Product added successfully!'),
+                      SnackBar(
+                        content: Text(
+                          isEditing
+                              ? 'Product updated successfully!'
+                              : 'Product added successfully!',
+                        ),
                       ),
                     );
                   },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Save Product'),
+                  icon: Icon(isEditing ? Icons.save_outlined : Icons.add),
+                  label: Text(isEditing ? 'Update Product' : 'Save Product'),
                 ),
               ),
             ],
