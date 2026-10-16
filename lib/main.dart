@@ -314,7 +314,9 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
 
   void updateProduct(Product oldProduct, Product newProduct) {
     setState(() {
-      final index = products.indexWhere((product) => product.id == oldProduct.id);
+      final index = products.indexWhere(
+        (product) => product.id == oldProduct.id,
+      );
       if (index >= 0) {
         products[index] = newProduct;
       }
@@ -872,7 +874,12 @@ class _HomePageState extends State<HomePage> {
             sliver: SliverLayoutBuilder(
               builder: (context, constraints) {
                 final width = constraints.crossAxisExtent;
-                final columns = width >= 700 ? 4 : 2;
+                final columns = switch (width) {
+                  >= 1200 => 4,
+                  >= 900 => 3,
+                  >= 480 => 2,
+                  _ => 1,
+                };
 
                 return SliverGrid(
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -1026,59 +1033,65 @@ class _SearchPageState extends State<SearchPage> {
           Expanded(
             child: results.isEmpty
                 ? const Center(child: Text('No products found.'))
-                : GridView.builder(
-                    padding: const EdgeInsets.all(12),
-                    itemCount: results.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      final columns = constraints.maxWidth < 480 ? 1 : 2;
+
+                      return GridView.builder(
+                        padding: const EdgeInsets.all(12),
+                        itemCount: results.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: columns,
                           crossAxisSpacing: 10,
                           mainAxisSpacing: 10,
                           mainAxisExtent: 285,
                         ),
-                    itemBuilder: (context, index) {
-                      final product = results[index];
+                        itemBuilder: (context, index) {
+                          final product = results[index];
 
-                      return ProductCard(
-                        product: product,
-                        isFavorite: widget.wishlist.contains(product),
-                        onAddToCart: () => widget.onAddToCart(product),
-                        onToggleWishlist: () => widget.onToggleWishlist(product),
-                        onEditProduct: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ProductEditorPage(
-                                product: product,
-                                onSave: (updatedProduct) {
-                                  widget.onEditProduct(product, updatedProduct);
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                        onDeleteProduct: () {
-                          showDialog(
-                            context: context,
-                            builder: (dialogContext) => AlertDialog(
-                              title: const Text('Delete product?'),
-                              content: Text(
-                                'This will remove ${product.name} from your catalog.',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(dialogContext),
-                                  child: const Text('Cancel'),
+                          return ProductCard(
+                            product: product,
+                            isFavorite: widget.wishlist.contains(product),
+                            onAddToCart: () => widget.onAddToCart(product),
+                            onToggleWishlist: () =>
+                                widget.onToggleWishlist(product),
+                            onEditProduct: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ProductEditorPage(
+                                    product: product,
+                                    onSave: (updatedProduct) {
+                                      widget.onEditProduct(product, updatedProduct);
+                                    },
+                                  ),
                                 ),
-                                FilledButton.tonal(
-                                  onPressed: () {
-                                    Navigator.pop(dialogContext);
-                                    widget.onDeleteProduct(product);
-                                  },
-                                  child: const Text('Delete'),
+                              );
+                            },
+                            onDeleteProduct: () {
+                              showDialog(
+                                context: context,
+                                builder: (dialogContext) => AlertDialog(
+                                  title: const Text('Delete product?'),
+                                  content: Text(
+                                    'This will remove ${product.name} from your catalog.',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(dialogContext),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    FilledButton.tonal(
+                                      onPressed: () {
+                                        Navigator.pop(dialogContext);
+                                        widget.onDeleteProduct(product);
+                                      },
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              );
+                            },
                           );
                         },
                       );
@@ -1161,9 +1174,9 @@ class CartPage extends StatelessWidget {
                                   errorBuilder: (_, __, ___) => Container(
                                     width: 85,
                                     height: 85,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .surfaceContainerHighest,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerHighest,
                                     child: Icon(product.icon, size: 35),
                                   ),
                                 ),
@@ -1420,8 +1433,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 Expanded(
                   child: Text(
                     'Delivery details',
-                    style: Theme.of(context).textTheme.titleLarge
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -1523,8 +1537,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
             const SizedBox(height: 24),
             Text(
               'Payment method',
-              style: Theme.of(context).textTheme.titleLarge
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Card(
@@ -1689,11 +1704,7 @@ class ProductEditorPage extends StatefulWidget {
   final Product? product;
   final ValueChanged<Product> onSave;
 
-  const ProductEditorPage({
-    super.key,
-    this.product,
-    required this.onSave,
-  });
+  const ProductEditorPage({super.key, this.product, required this.onSave});
 
   @override
   State<ProductEditorPage> createState() => _ProductEditorPageState();
@@ -1701,7 +1712,7 @@ class ProductEditorPage extends StatefulWidget {
 
 class AddProductPage extends ProductEditorPage {
   const AddProductPage({super.key, required super.onSave})
-      : super(product: null);
+    : super(product: null);
 }
 
 class _ProductEditorPageState extends State<ProductEditorPage> {
@@ -1751,7 +1762,9 @@ class _ProductEditorPageState extends State<ProductEditorPage> {
             children: [
               Center(
                 child: Icon(
-                  isEditing ? Icons.edit_note_outlined : Icons.add_shopping_cart,
+                  isEditing
+                      ? Icons.edit_note_outlined
+                      : Icons.add_shopping_cart,
                   size: 65,
                   color: primaryColor,
                 ),
@@ -1759,7 +1772,10 @@ class _ProductEditorPageState extends State<ProductEditorPage> {
               const SizedBox(height: 20),
               Text(
                 isEditing ? 'Update product details' : 'Product Details',
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 20),
               _field(nameController, 'Product Name', 'Enter product name'),
@@ -1833,7 +1849,8 @@ class _ProductEditorPageState extends State<ProductEditorPage> {
 
                     final image = imageController.text.trim();
                     final product = Product(
-                      id: widget.product?.id ??
+                      id:
+                          widget.product?.id ??
                           'product-${DateTime.now().millisecondsSinceEpoch}',
                       name: nameController.text.trim(),
                       category: category,
@@ -2046,8 +2063,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   Text(
                     isCreatingAccount ? 'Create your account' : 'Welcome back!',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -2083,8 +2101,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     validator: (v) {
                       if (v == null || v.trim().isEmpty)
                         return 'Enter your email address';
-                      if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-                          .hasMatch(v.trim()))
+                      if (!RegExp(
+                        r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                      ).hasMatch(v.trim()))
                         return 'Enter a valid email address';
                       return null;
                     },
@@ -2136,9 +2155,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Text(

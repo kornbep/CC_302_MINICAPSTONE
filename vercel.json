@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "installCommand": "bash scripts/install_flutter.sh",
+  "buildCommand": "bash scripts/build_web.sh",
+  "outputDirectory": "build/web",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}
