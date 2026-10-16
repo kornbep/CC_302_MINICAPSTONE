@@ -1,0 +1,8 @@
+{
+  "name": "pixelmart-flutter-web",
+  "private": true,
+  "scripts": {
+    "install": "bash scripts/install_flutter.sh",
+    "build": "bash scripts/build_web.sh"
+  }
+}
